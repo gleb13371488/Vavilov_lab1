@@ -1,0 +1,11 @@
+Pipe Data:
+Name: Jopa
+Length: 1
+Diameter: 1
+At Work: Yes
+
+Compressor Station Data:
+Name: 
+Number of Workshops: 0
+Number of Workshops at Work: 0
+Effectiveness: 0
