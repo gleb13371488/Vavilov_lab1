@@ -3,6 +3,7 @@
 #include<fstream>
 #include<vector>
 #include <string>
+#include "ConsoleApplication1.h"
 
 
 using namespace std;
@@ -21,47 +22,88 @@ T GetCorrectNumber(T min, T max)
     }
     return x;
 }
-class Pipe {
-    public:
+struct Pipe {
+public:
         string name;
         int length, diameter;
         bool atWork; 
 
-        Pipe(const string& n, int lenn, int diam, bool work) : name(n), length(lenn), diameter(diam), atWork(work) {}
+        Pipe() : name(""), length(0), diameter(0), atWork(false) {}
         
-        void change_value() {
-            atWork = !atWork;
+        void read() {
+            cout << "Please, type the name of the pipe: ";
+            cin.ignore();
+            getline(cin, name);
+            cout << "Please, type the length: ";
+            cin >> length;
+            cout << "Please, type the diameter: ";
+            cin >> diameter;
+            cout << "Is pipe functioning? (1 - Yes, 0 - No): ";
+            cin >> atWork;
         }
 
-        void print_info(){
-            cout << "===Registered pipe detected===\nName: " << name << "\nLength of the pipe: " << length << "\nDiameter of the pipe: " << diameter << "\nIs at work(1 - Yes, 0 - No): " << atWork << endl;
+        void display() {
+            cout << "===Registered pipe detected===\nName: " << name << endl;
+            cout << "Length of the pipe: " << length << endl;
+            cout << "Diameter of the pipe: " << diameter << endl;
+            cout << "Is at work(1 - Yes, 0 - No) " << (atWork ? "Yes" : "No") << endl;
         }
+
+        void toggleRepair() {
+            atWork = !atWork;
+            cout << "AtWork status toggled." << endl;
+        }
+
+       
+
+       
 
 };
 
 class CompressorStation {
     public:
         string name;
-        int numberOfWorkshops, numberOfWorkshopsAtWork, effectiveness;
+        int totalWorkshops, workshopsInOperation, efficiency;
 
-        CompressorStation(const string& n, int workshops, int workshopsAtWork, int eff) : name(n), numberOfWorkshops(workshops), numberOfWorkshopsAtWork(workshopsAtWork), effectiveness(eff) {}
+        CompressorStation() : name(""), totalWorkshops(0), workshopsInOperation(0), efficiency(0) {}
 
-        void change_value(int nOfWorkshopsAtWork) {
-            while (nOfWorkshopsAtWork > numberOfWorkshops){
-                cout << "\n\n\n\n\n|----------------------------------------------------------------------------------------|\n\
-|   WARNING: The number of workshops wasn't changed, enter a different number.           |\n\
-|   Error: Exceeded number of available workshops.                                       |\n\
-|----------------------------------------------------------------------------------------|\n\n";
-
-                cout << "Total number of workshops: " << numberOfWorkshops << endl << "Enter the number of number of workshops at work: ";
-                cin >> nOfWorkshopsAtWork;
-            }
-            numberOfWorkshopsAtWork = nOfWorkshopsAtWork;
-            
+        void read() {
+            cout << "Type the name of the Compressor station: ";
+            cin.ignore();
+            getline(cin, name);
+            cout << "Type the total number of workshops: ";
+            cin >> totalWorkshops;
+            cout << "Workshops in work: ";
+            cin >> workshopsInOperation;
+            cout << "Type the efficiency number: ";
+            cin >> efficiency;
         }
 
-        void print_info(){
-            cout << "===Registered station detected===\nName: " << name << "\nNumber of workshops: " << numberOfWorkshops << "\nNumber of workshops at work: " << numberOfWorkshopsAtWork << "\nEffectiveness: " << effectiveness << endl;
+        void display() {
+            cout << "===Registered station detected===\nName: " << name << endl;
+            cout << "Total number of workshops: " << totalWorkshops << endl;
+            cout << "Workshops in work: " << workshopsInOperation << endl;
+            cout << "Efficiency: " << efficiency << endl;
+        }
+
+        void startWorkshop() {
+            if (workshopsInOperation < totalWorkshops) {
+                workshopsInOperation++;
+                cout << "Workshop started." << endl;
+            }
+            else {
+                cout << "Too much active workshops." << endl;
+            }
+        }
+
+        void stopWorkshop() {
+            if (workshopsInOperation > 0) {
+                workshopsInOperation--;
+                cout << "Workshop stopped." << endl;
+            }
+            else {
+                cout << "Not any workshop is active." << endl;
+            }
         }
 };
 
@@ -82,95 +124,91 @@ void PrintMenu()
 }
 
 
-
-void saveDataToFile(const Pipe& pipe, const CompressorStation& station) {
-    ofstream outputFile("data.txt");
-
-    if (outputFile.is_open()) {
-        outputFile << "Pipe Data:\n";
-        outputFile << "Name: " << pipe.name << "\n";
-        outputFile << "Length: " << pipe.length << "\n";
-        outputFile << "Diameter: " << pipe.diameter << "\n";
-        outputFile << "At Work: " << (pipe.atWork ? "Yes" : "No") << "\n";
-
-        outputFile << "\nCompressor Station Data:\n";
-        outputFile << "Name: " << station.name << "\n";
-        outputFile << "Number of Workshops: " << station.numberOfWorkshops << "\n";
-        outputFile << "Number of Workshops at Work: " << station.numberOfWorkshopsAtWork << "\n";
-        outputFile << "Effectiveness: " << station.effectiveness << "\n";
-
-        outputFile.close();
-        cout << "Data has been saved to 'data.txt'." << endl;
+void saveDataToFile(const vector<Pipe>& pipes, const vector<CompressorStation>& stations, const string& pipesFilename, const string& stationsFilename) {
+    ofstream pipesFile(pipesFilename);
+    if (pipesFile.is_open()) {
+        for (const Pipe& pipe : pipes) {
+            pipesFile << pipe.name << '\n';
+            pipesFile << pipe.length << '\n';
+            pipesFile << pipe.diameter << '\n';
+            pipesFile << pipe.atWork << '\n';
+        }
+        pipesFile.close();
+        cout << "Pipes data saved: " << pipesFilename << endl;
     }
     else {
-        cout << "Unable to open the file for saving." << endl;
+        cerr << "File opening error(pipes)." << endl;
+    }
+
+    ofstream stationsFile(stationsFilename);
+    if (stationsFile.is_open()) {
+        for (const CompressorStation& station : stations) {
+            stationsFile << station.name << '\n';
+            stationsFile << station.totalWorkshops << '\n';
+            stationsFile << station.workshopsInOperation << '\n';
+            stationsFile << station.efficiency << '\n';
+        }
+        stationsFile.close();
+        cout << "Stations data saved: " << stationsFilename << endl;
+    }
+    else {
+        cerr << "File opening error(stations)." << endl;
     }
 }
 
-void loadDataFromFile(Pipe& pipe, CompressorStation& station) {
-    ifstream inputFile("data.txt");
 
-    if (inputFile.is_open()) {
-        string line;
-        string section;  // To keep track of the current section ("Pipe" or "Compressor Station")
-
-        while (getline(inputFile, line)) {
-            if (line.empty()) {
-                // Skip empty lines
-                continue;
-            } else if (line == "Pipe Data:") {
-                section = "Pipe";
-            } else if (line == "Compressor Station Data:") {
-                section = "Compressor Station";
-            } else {
-                // Split the line into key and value
-                size_t separatorPos = line.find(':');
-                if (separatorPos != string::npos && separatorPos > 0 && separatorPos < line.length() - 1) {
-                    string key = line.substr(0, separatorPos);
-                    string value = line.substr(separatorPos + 2);  // Skip the space after ':'
-
-                    // Update the corresponding object based on the section
-                    if (section == "Pipe") {
-                        if (key == "Name") {
-                            pipe.name = value;
-                        } else if (key == "Length") {
-                            pipe.length = stoi(value);
-                        } else if (key == "Diameter") {
-                            pipe.diameter = stoi(value);
-                        } else if (key == "At Work") {
-                            pipe.atWork = (value == "Yes");
-                        }
-                    } else if (section == "Compressor Station") {
-                        if (key == "Name") {
-                            station.name = value;
-                        } else if (key == "Number of Workshops") {
-                            station.numberOfWorkshops = stoi(value);
-                        } else if (key == "Number of Workshops at Work") {
-                            station.numberOfWorkshopsAtWork = stoi(value);
-                        } else if (key == "Effectiveness") {
-                            station.effectiveness = stoi(value);
-                        }
-                    }
-                }
+void loadDataFromFile(vector<Pipe>& pipes, vector<CompressorStation>& stations, const string& pipesFilename, const string& stationsFilename) {
+    ifstream pipesFile(pipesFilename);
+    if (pipesFile.is_open()) {
+        pipes.clear();
+        while (!pipesFile.eof()) {
+            Pipe pipe;
+            getline(pipesFile, pipe.name);
+            pipesFile >> pipe.length;
+            pipesFile >> pipe.diameter;
+            pipesFile >> pipe.atWork;
+            pipesFile.ignore();
+            if (!pipe.name.empty()) {
+                pipes.push_back(pipe);
             }
         }
+        pipesFile.close();
+        cout << "Pipes data loaded: " << pipesFilename << endl;
+    }
+    else {
+        cerr << "File opening error(pipes)." << endl;
+    }
 
-        inputFile.close();
-        cout << "Data has been loaded from 'data.txt'." << endl;
-    } else {
-        cout << "Unable to open the file for loading." << endl;
+    ifstream stationsFile(stationsFilename);
+    if (stationsFile.is_open()) {
+        stations.clear();
+        while (!stationsFile.eof()) {
+            CompressorStation station;
+            getline(stationsFile, station.name);
+            stationsFile >> station.totalWorkshops;
+            stationsFile >> station.workshopsInOperation;
+            stationsFile >> station.efficiency;
+            stationsFile.ignore();
+            if (!station.name.empty()) {
+                stations.push_back(station);
+            }
+        }
+        stationsFile.close();
+        cout << "Stations data loaded: " << stationsFilename << endl;
+    }
+    else {
+        cerr << "File opening error(stations)." << endl;
     }
 }
+
+
 
 
 
 int main()
 {
     vector <Pipe> pipes;
-    vector <CompressorStation> compressor_stations;
-
-    Pipe pipe("", 0, 0, false);
-    CompressorStation station("", 0, 0, 0);
+    vector <CompressorStation> stations;
     bool pipeAdded = false;
     bool stationAdded = false;
 
@@ -183,113 +221,104 @@ int main()
         {
         case 1:
         {
-            bool completion = true;
-            string name, atWork;
-            int length, diameter;
-            bool atWorkBool;
-            cout << "Enter the name of the pipe: ";
-            cin >> name;
-            cout << "Enter the length of the pipe: ";
-            cin >> length;
-            cout << "Enter the diameter of the Pipe: ";
-            cin >> diameter;
-            cout << "Enter whether the pipe is currently at work(Y/n):  ";
-            cin >> atWork;
-
-            while (completion) {
-                if (atWork == "Y") {
-                    atWorkBool = true;
-                    completion = false;
-                }
-                else if (atWork == "n") {
-                    atWorkBool = false;
-                    completion = false;
-                }
-                else {
-                    cout << "Please enter a valid working status(Y/n): ";
-                    cin >> atWork;
-                }
-            }
-
-            pipe = Pipe(name, length, diameter, atWorkBool);
-            pipeAdded = true;
+            
+            Pipe pipe;
+            pipe.read();
+            pipes.push_back(pipe);
             break;
         }
 
-
         case 2:
         {
-            bool completion = true;
-            string name;
-            int numberOfWorkshops, numberOfWorkshopsAtWork, effectiveness;
-
-            cout << "Enter the name of the compressor station: ";
-            cin >> name;
-            cout << "Enter the total number of workshops: ";
-            cin >> numberOfWorkshops;
-            cout << "Enter the number of workshops at work: ";
-            cin >> numberOfWorkshopsAtWork;
-            cout << "Enter the effectiveness of the compressor station: ";
-            cin >> effectiveness;
-
-            while (completion) {
-                if (numberOfWorkshops > numberOfWorkshopsAtWork) {
-                    completion = false;
-                }
-                else {
-                    cout << "Number of working workshops can't be more than the total amount. Try again:" << endl;
-                    cout << "Enter the total number of workshops: ";
-                    cin >> numberOfWorkshops;
-                    cout << "\nEnter the number of workshops at work: ";
-                    cin >> numberOfWorkshopsAtWork;
-                }
-            }
-
-            station = CompressorStation(name, numberOfWorkshops, numberOfWorkshopsAtWork, effectiveness);
-            stationAdded = true;
+            CompressorStation station;
+            station.read();
+            stations.push_back(station);
             break;
         }
         case 3:
         {
-            string continueTheCode;
-            if (pipeAdded) {
-                pipe.print_info();
+            
+            cout << "Pipes:" << endl;
+            for (Pipe& pipe : pipes) {
+                pipe.display();
             }
-            else {
-                cout << "\n\n\n\n\n\n Please ADD a pipe";
+            cout << "Compressor stations:" << endl;
+            for (CompressorStation& station : stations) {
+                station.display();
             }
-            if (stationAdded) {
-                station.print_info();
-            }
-            else {
-                cout << "\n\n\n\n\n\n Please ADD a station";
-            }
-            cout << "\n\n\n\n\n\nEnter anything in order to continue: ";
-            cin >> continueTheCode;
             break;
+            
         }
         case 4:
         {
-            pipe.change_value();
-            cout << "Your request was completed." << endl;;
+            if (!pipes.empty()) {
+                cout << "Type the name of the editing pipe: ";
+                string name;
+                cin.ignore();
+                getline(cin, name);
+                bool found = false;
+                for (Pipe& pipe : pipes) {
+                    if (pipe.name == name) {
+                        pipe.toggleRepair();
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    cout << "The pipe with the specified name was not found." << endl;
+                }
+            }
+            else {
+                cout << "No data on pipes." << endl;
+            }
             break;
         }
         case 5:
         {
-            string numberAtWork;
-            cout << "Enter the new number of stations at work: ";
-            cin >> numberAtWork;
-            station.change_value(stoi(numberAtWork));
+            if (!stations.empty()) {
+                cout << "Enter the name of the COP to edit: ";
+                string name;
+                cin.ignore();
+                getline(cin, name);
+                bool found = false;
+                for (CompressorStation& station : stations) {
+                    if (station.name == name) {
+                        int workshopChoice;
+                        cout << "Select an action: 1. Start the workshop 2. Stop the Workshop: ";
+                        cin >> workshopChoice;
+                        switch (workshopChoice) {
+                        case 1:
+                            station.startWorkshop();
+                            break;
+                        case 2:
+                            station.stopWorkshop();
+                            break;
+                        default:
+                            cout << "Incorrect choice of action." << endl;
+                            break;
+                        }
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    cout << "A COP with the specified name was not found." << endl;
+                }
+            }
+            else {
+                cout << "There is no data on compressor stations." << endl;
+            }
             break;
         }
         case 6:
         {
-            saveDataToFile(pipe, station);
+            saveDataToFile(pipes, stations, "pipes.txt", "stations.txt");
+
             break;
         }
         case 7:
         {
-            loadDataFromFile(pipe, station);
+            loadDataFromFile(pipes, stations, "pipes.txt", "stations.txt");
             break;
         }
         case 0:
@@ -300,6 +329,7 @@ int main()
         default:
         {
             cout << "Wrong action" << endl;
+            break;
         }
         }
     }
