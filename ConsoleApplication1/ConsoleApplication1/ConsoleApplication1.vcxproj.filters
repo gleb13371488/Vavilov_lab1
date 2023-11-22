@@ -20,7 +20,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ConsoleApplication1.h">
+    <ClInclude Include="CompressorStation.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>

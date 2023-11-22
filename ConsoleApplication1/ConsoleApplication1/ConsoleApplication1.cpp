@@ -3,7 +3,8 @@
 #include<fstream>
 #include<vector>
 #include <string>
-#include "ConsoleApplication1.h"
+#include "CompressorStation.h"
+#include "Pipe.h"
 
 
 using namespace std;
@@ -22,91 +23,6 @@ T GetCorrectNumber(T min, T max)
     }
     return x;
 }
-struct Pipe {
-public:
-        string name;
-        int length, diameter;
-        bool atWork; 
-
-        Pipe() : name(""), length(0), diameter(0), atWork(false) {}
-        
-        void read() {
-            cout << "Please, type the name of the pipe: ";
-            cin.ignore();
-            getline(cin, name);
-            cout << "Please, type the length: ";
-            cin >> length;
-            cout << "Please, type the diameter: ";
-            cin >> diameter;
-            cout << "Is pipe functioning? (1 - Yes, 0 - No): ";
-            cin >> atWork;
-        }
-
-        void display() {
-            cout << "===Registered pipe detected===\nName: " << name << endl;
-            cout << "Length of the pipe: " << length << endl;
-            cout << "Diameter of the pipe: " << diameter << endl;
-            cout << "Is at work(1 - Yes, 0 - No) " << (atWork ? "Yes" : "No") << endl;
-        }
-
-        void toggleRepair() {
-            atWork = !atWork;
-            cout << "AtWork status toggled." << endl;
-        }
-
-       
-
-       
-
-};
-
-class CompressorStation {
-    public:
-        string name;
-        int totalWorkshops, workshopsInOperation, efficiency;
-
-        CompressorStation() : name(""), totalWorkshops(0), workshopsInOperation(0), efficiency(0) {}
-
-        void read() {
-            cout << "Type the name of the Compressor station: ";
-            cin.ignore();
-            getline(cin, name);
-            cout << "Type the total number of workshops: ";
-            cin >> totalWorkshops;
-            cout << "Workshops in work: ";
-            cin >> workshopsInOperation;
-            cout << "Type the efficiency number: ";
-            cin >> efficiency;
-        }
-
-        void display() {
-            cout << "===Registered station detected===\nName: " << name << endl;
-            cout << "Total number of workshops: " << totalWorkshops << endl;
-            cout << "Workshops in work: " << workshopsInOperation << endl;
-            cout << "Efficiency: " << efficiency << endl;
-        }
-
-        void startWorkshop() {
-            if (workshopsInOperation < totalWorkshops) {
-                workshopsInOperation++;
-                cout << "Workshop started." << endl;
-            }
-            else {
-                cout << "Too much active workshops." << endl;
-            }
-        }
-
-        void stopWorkshop() {
-            if (workshopsInOperation > 0) {
-                workshopsInOperation--;
-                cout << "Workshop stopped." << endl;
-            }
-            else {
-                cout << "Not any workshop is active." << endl;
-            }
-        }
-};
-
 
 void PrintMenu()
 {
