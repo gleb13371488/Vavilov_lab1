@@ -2,12 +2,99 @@
 #include<iostream> 
 #include<fstream>
 #include<vector>
+#include <sstream>
+#include <algorithm>
 #include <string>
 #include "CompressorStation.h"
 #include "Pipe.h"
 
 
 using namespace std;
+
+int Pipe::idCounter = 0;
+int CompressorStation::idCounter = 0;
+
+
+// Разделение строки по пробелам
+std::vector<std::string> split(const std::string& s, char delimiter) {
+    std::vector<std::string> tokens;
+    std::istringstream tokenStream(s);
+    std::string token;
+    while (std::getline(tokenStream, token, delimiter)) {
+        tokens.push_back(token);
+    }
+    return tokens;
+}
+
+template <typename T>
+vector<T*> searchByName(const vector<T>& objects, const string& name)
+{
+    vector<T*> result;
+    for (auto& obj : objects)
+    {
+        if (obj->name == name)
+        {
+            result.push_back(obj);
+        }
+    }
+    return result;
+}
+
+template <typename T>
+vector<T*> searchByStatus(const vector<T>& objects, bool status)
+{
+    vector<T*> result;
+    for (auto& obj : objects)
+    {
+        if (obj->atWork == status && typeid(obj) == typeid(Pipe))
+        {
+            result.push_back(obj);
+        }
+        else if (obj->workshopsInOperation == status && typeid(obj) == typeid(CompressorStation))
+        {
+            result.push_back(obj);
+        }
+    }
+    return result;
+}
+
+template <typename T>
+void batchEdit(vector<T*>& objects, const string& name, bool status)
+{
+    for (auto& obj : objects)
+    {
+        if (obj->name == name)
+        {
+            obj->atWork = status;
+            obj->workshopsInOperation = status;
+        }
+    }
+}
+
+template <typename T>
+void batchAdd(std::vector<T*>& objects, const std::vector<std::string>& names) {
+    for (const auto& name : names) {
+        T* newObj = new T();
+        newObj->name = name; // Устанавливаем имя
+        newObj->read();
+        objects.push_back(newObj);
+    }
+}
+
+template <typename T>
+void batchDelete(vector<T*>& objects, const string& name)
+{
+    auto it = remove_if(objects.begin(), objects.end(), [&](T* obj) {
+        return obj->name == name;
+        });
+
+    for (auto iter = it; iter != objects.end(); ++iter)
+    {
+        delete* iter;
+    }
+
+    objects.erase(it, objects.end());
+}
 
 template <typename T>
 T GetCorrectNumber(T min, T max)
@@ -27,11 +114,11 @@ T GetCorrectNumber(T min, T max)
 void PrintMenu()
 {
     cout << " | Welcome to work panel!Choose any of the provided options if needed or exit the panel :" << endl
-        << "1. Enter '1' to ADD a pipe." << endl
-        << "2. Enter '2' to ADD a compressor station." << endl
+        << "1. Enter '1' to ADD a pipe or pipes(space separated)." << endl
+        << "2. Enter '2' to ADD a compressor station or stations(space separated)." << endl
         << "3. Enter '3' to VIEW all the elements." << endl
-        << "4. Enter '4' to EDIT a pipe." << endl
-        << "5. Enter '5' to EDIT a compressor station." << endl
+        << "4. Enter '4' to EDIT a pipe or pipes." << endl
+        << "5. Enter '5' to EDIT a compressor station or stations." << endl
         << "6. Enter '6' to SAVE a your changes." << endl
         << "7. Enter '7' to LOAD the data from the file." << endl
         << "0. Enter '0' to EXIT the work panel." << endl
@@ -39,94 +126,61 @@ void PrintMenu()
 
 }
 
-
-void saveDataToFile(const vector<Pipe>& pipes, const vector<CompressorStation>& stations, const string& pipesFilename, const string& stationsFilename) {
-    ofstream pipesFile(pipesFilename);
-    if (pipesFile.is_open()) {
-        for (const Pipe& pipe : pipes) {
-            pipesFile << pipe.name << '\n';
-            pipesFile << pipe.length << '\n';
-            pipesFile << pipe.diameter << '\n';
-            pipesFile << pipe.atWork << '\n';
+template <typename T>
+void saveDataToFile(const vector<T*>& objects, const string& filename) {
+    ofstream file(filename);
+    if (file.is_open()) {
+        for (const T* obj : objects) {
+            obj->saveToFile(file);
         }
-        pipesFile.close();
-        cout << "Pipes data saved: " << pipesFilename << endl;
+        file.close();
+        cout << "Data saved: " << filename << endl;
     }
     else {
-        cerr << "File opening error(pipes)." << endl;
-    }
-
-    ofstream stationsFile(stationsFilename);
-    if (stationsFile.is_open()) {
-        for (const CompressorStation& station : stations) {
-            stationsFile << station.name << '\n';
-            stationsFile << station.totalWorkshops << '\n';
-            stationsFile << station.workshopsInOperation << '\n';
-            stationsFile << station.efficiency << '\n';
-        }
-        stationsFile.close();
-        cout << "Stations data saved: " << stationsFilename << endl;
-    }
-    else {
-        cerr << "File opening error(stations)." << endl;
+        cerr << "File opening error: " << filename << endl;
     }
 }
 
-
-void loadDataFromFile(vector<Pipe>& pipes, vector<CompressorStation>& stations, const string& pipesFilename, const string& stationsFilename) {
-    ifstream pipesFile(pipesFilename);
-    if (pipesFile.is_open()) {
-        pipes.clear();
-        while (!pipesFile.eof()) {
-            Pipe pipe;
-            getline(pipesFile, pipe.name);
-            pipesFile >> pipe.length;
-            pipesFile >> pipe.diameter;
-            pipesFile >> pipe.atWork;
-            pipesFile.ignore();
-            if (!pipe.name.empty()) {
-                pipes.push_back(pipe);
+// Функция загрузки данных из файла
+template <typename T>
+void loadDataFromFile(vector<T*>& objects, const string& filename) {
+    ifstream file(filename);
+    if (file.is_open()) {
+        objects.clear();
+        while (!file.eof()) {
+            T* obj = new T();
+            if (obj->loadFromFile(file)) {
+                objects.push_back(obj);
+            }
+            else {
+                delete obj;
             }
         }
-        pipesFile.close();
-        cout << "Pipes data loaded: " << pipesFilename << endl;
+        file.close();
+        cout << "Data loaded: " << filename << endl;
     }
     else {
-        cerr << "File opening error(pipes)." << endl;
-    }
-
-    ifstream stationsFile(stationsFilename);
-    if (stationsFile.is_open()) {
-        stations.clear();
-        while (!stationsFile.eof()) {
-            CompressorStation station;
-            getline(stationsFile, station.name);
-            stationsFile >> station.totalWorkshops;
-            stationsFile >> station.workshopsInOperation;
-            stationsFile >> station.efficiency;
-            stationsFile.ignore();
-            if (!station.name.empty()) {
-                stations.push_back(station);
-            }
-        }
-        stationsFile.close();
-        cout << "Stations data loaded: " << stationsFilename << endl;
-    }
-    else {
-        cerr << "File opening error(stations)." << endl;
+        cerr << "File opening error: " << filename << endl;
     }
 }
 
+template <typename T>
+void displayObjects(const vector<T*>& objects)
+{
+    for (const auto& obj : objects)
+    {
+        obj->display();
+    }
+}
 
 
 
 
 int main()
 {
-    vector <Pipe> pipes;
-    vector <CompressorStation> stations;
-    bool pipeAdded = false;
-    bool stationAdded = false;
+    vector <Pipe*> pipes;
+    vector <CompressorStation*> stations;
+    
 
 
     while (1)
@@ -138,34 +192,43 @@ int main()
         case 1:
         {
             
-            Pipe pipe;
-            pipe.read();
-            pipes.push_back(pipe);
+            cout << "Enter the names of pipes to add (space-separated): ";
+            string namesToAdd;
+            cin.ignore();
+            getline(cin, namesToAdd);
+
+            vector<string> pipeNames = split(namesToAdd, ' ');
+
+            batchAdd(pipes, pipeNames);
             break;
         }
 
         case 2:
         {
-            CompressorStation station;
-            station.read();
-            stations.push_back(station);
+            cout << "Enter the names of compressor stations to add (space-separated): ";
+            string namesToAdd;
+            cin.ignore();
+            getline(cin, namesToAdd);
+
+            vector<string> stationNames = split(namesToAdd, ' ');
+
+            batchAdd(stations, stationNames);
             break;
         }
         case 3:
         {
-            
             cout << "Pipes:" << endl;
-            for (Pipe& pipe : pipes) {
-                pipe.display();
+            for (const Pipe* pipe : pipes) {
+                pipe->displayDetails();
             }
+
             cout << "Compressor stations:" << endl;
-            for (CompressorStation& station : stations) {
-                station.display();
+            for (const CompressorStation* station : stations) {
+                station->displayDetails();
             }
             break;
-            
         }
-        case 4:
+        /*case 4:
         {
             if (!pipes.empty()) {
                 cout << "Type the name of the editing pipe: ";
@@ -188,8 +251,8 @@ int main()
                 cout << "No data on pipes." << endl;
             }
             break;
-        }
-        case 5:
+        }*/
+        /*case 5:
         {
             if (!stations.empty()) {
                 cout << "Enter the name of the COP to edit: ";
@@ -225,16 +288,29 @@ int main()
                 cout << "There is no data on compressor stations." << endl;
             }
             break;
-        }
+        }*/
         case 6:
         {
-            saveDataToFile(pipes, stations, "pipes.txt", "stations.txt");
+            string filename;
+            cout << "Enter the filename to save data: ";
+            cin >> filename;
+
+            // Сохраняем данные в файл
+            saveDataToFile(pipes, filename + "_pipes.txt");
+            saveDataToFile(stations, filename + "_stations.txt");
 
             break;
         }
         case 7:
         {
-            loadDataFromFile(pipes, stations, "pipes.txt", "stations.txt");
+            string filename;
+            cout << "Enter the filename to load data: ";
+            cin >> filename;
+
+            // Загружаем данные из файла
+            loadDataFromFile(pipes, filename + "_pipes.txt");
+            loadDataFromFile(stations, filename + "_stations.txt");
+
             break;
         }
         case 0:
