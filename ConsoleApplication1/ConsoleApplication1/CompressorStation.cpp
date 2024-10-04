@@ -45,7 +45,6 @@ void CompressorStation::saveToFile(std::ofstream& file) const {
     file << efficiency << '\n';
 }
 
-// Загрузка данных из файла
 bool CompressorStation::loadFromFile(std::ifstream& file) {
     std::string type;
     std::getline(file, type);

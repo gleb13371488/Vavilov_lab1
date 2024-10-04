@@ -2,4 +2,6 @@
   ConsoleApplication1.cpp
   Pipe.cpp
   Создание кода...
-  ConsoleApplication1.vcxproj -> C:\Users\Gleb\Documents\GitHub\Vavilov_lab1\ConsoleApplication1\x64\Debug\ConsoleApplication1.exe
+C:\Program Files (x86)\Windows Kits\10\lib\10.0.22621.0\um\x64\kernel32.lib : warning LNK4003: недопустимый формат библиотеки; библиотека пропущена
+CVTRES : fatal error CVT1107: "C:\Program Files (x86)\Windows Kits\10\lib\10.0.22621.0\um\x64\kernel32.lib" яютЁхцфхэ
+LINK : fatal error LNK1123: сбой при преобразовании в COFF: файл недопустим или поврежден
